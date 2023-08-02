@@ -1,0 +1,299 @@
+---
+title: "Foundation of Data Analytics Project Report"
+output: html_document
+---
+#### DATE: 18.11.2022
+#### TEAM MEMBERS:
+
+##### G. GAYATHRI - 20BPS1048
+##### G. NARAYANEE NIMESHIKA - 20BPS1111
+
+###### PROBLEM STATEMENT: Finding the most contributing factor for stroke prediction and analysing the result.
+###### DATA SOURCE : https://www.kaggle.com/code/aditimulye/stroke-prediction-visualization-prediction
+###### OBJECTIVE : To Visualize the relationships between various Healthy and Unhealthy habits to Heart Strokes, and thereby predict the stroke probability with the parameters.
+```{r}
+#Reading the dataset
+df <- read.csv("project.csv")
+
+names(df)
+print("Coulmn Names of the dataset.")
+
+library(dplyr)
+df %>% count(work_type)
+unique(df$smoking_status)
+print("Calculating unique values of the column smoking status.")
+
+#Omitting NA values
+sum(is.na(df))
+head(df,10)
+df1 <- na.omit(df)
+sum(is.na(df1))
+
+
+
+#Cleaning the data
+
+library(dplyr)
+sum(is.na(df$bmi))
+head(unique(df$bmi))
+df$bmi <- as.integer(df$bmi)
+str(df)
+unique(df$bmi)
+mean(df$bmi,na.rm = TRUE)
+median(df$bmi,na.rm = TRUE)
+df %>%
+  summarize(avg=mean(bmi,na.rm = TRUE),med=median(bmi,na.rm = TRUE))
+df <- df %>%
+  mutate(bmi=replace(bmi,is.na(bmi),median(bmi,na.rm = TRUE)))
+
+sum(is.na(df$bmi))
+head(df,10)
+
+
+
+
+
+
+
+#DATA MANIPULATION USING DPLYR PACKAGE
+
+df1 <- data.frame(df %>% filter(stroke==1))
+df1 %>% count(smoking_status)
+print("INFERENCE : Count of people who have stroke and their smoking status.")
+
+
+df1 <- data.frame(df %>% filter(smoking_status == "never smoked" ,stroke==1))
+mean(df1$age)
+print("INFERENCE : Age is a contributing factor in stroke in those who have never smoked.")
+
+
+df1 <- data.frame(df %>% filter(smoking_status == "smokes" ,stroke==1))
+mean(df1$age)
+print("INFERENCE : Smokers are more likely than non-smokers to experience a stroke.")
+
+
+#Stats of people who are not subjected to stroke
+df2 <- data.frame(df %>% filter(stroke==0))
+nrow(df2)
+df2 %>% count(ever_married)
+df2 %>% count(mean(bmi))
+df2 %>% count(work_type)
+df2 %>% count(hypertension)
+df2 %>% count(heart_disease)
+df2 %>% count(smoking_status)
+
+
+df2%>%
+  group_by(work_type)%>%
+  summarise(mean(bmi))
+print("INFERENCE : People who are working tend to have higher BMI rate.")
+
+#Stats of people who are unemployed
+df3 <- data.frame(df %>% filter(work_type=="Never_worked"))
+nrow(df3)
+df3 %>% count(stroke)
+df3 %>% count(ever_married)
+df3 %>% count(mean(bmi))
+df3 %>% count(mean(age))
+df3 %>% count(hypertension)
+df3 %>% count(heart_disease)
+df3 %>% count(smoking_status)
+df3 %>% count(Residence_type)
+df3 %>% count(mean(avg_glucose_level))
+print("INFERENCE: People who are unemployed are not at risk for stroke, and they also do not have high blood pressure or heart disease. They are also not married. Their BMI is considered average, and their smoking status is either Unknown or Neversmoked. They also have a normal blood sugar level.")
+
+
+
+
+#the average glucose level of the patients based on the possibility of stroke 
+df%>%
+  group_by(stroke)%>%
+  summarise(mean(avg_glucose_level))
+print("INFERENCE: Higher glucose level then higher the chances of stroke.")
+
+
+
+
+#the work type of the patients based on the possibility of stroke 
+df%>%
+  group_by(ever_married)%>%
+  summarise(mean(bmi))
+print("INFERENCE: Married people tend to have higher BMI(Body Mass Index) rate than people who are not married.")
+
+
+
+```
+
+## STATISCAL OPERATIONS
+```{r}
+
+#Find the range of age in the given dataset
+rnge <- range(df$age)
+rnge
+print("The range of the age column.")
+
+
+#Print the age range of persons that has the most participation in the survey. Display the persons in that age range.
+breaks <- seq(rnge[1],rnge[2],by=10)
+breaks
+interval <- cut(df$age,breaks,right=FALSE)
+Interval_freq = table(interval)
+Interval_freq
+
+
+#MEAN, SD, VAR
+mean(df$age)
+print("The mean of the age column.")
+sd(df$avg_glucose_level)
+print("The standard deviation of the average glucose level column.")
+var(df$bmi)
+print("The variance of the BMI column.")
+
+
+
+#Correlation of two variables
+cor(df$age,df$stroke)     
+print("INFERENCE : It has a positive correlation. As age increases, the possibility of stroke also increases.")
+
+df1 <- sample_n(df,50)
+plot(df1$age,df1$stroke,type='o',col="blue")
+
+cor(df$avg_glucose_level,df$stroke)
+print("INFERENCE : It has a positive correlation. As Average glucose level increases, the possibility of stroke also increases.")
+df1 <- sample_n(df,50)
+plot(df1$avg_glucose_level,df1$stroke,type='o',col="violet")
+
+
+cor(df$bmi,df$stroke)
+print("INFERENCE : It has a positive correlation. As BMI increases, the possibility of stroke also increases.")
+df1 <- sample_n(df,50)
+plot(df1$bmi,df1$stroke,type='o',col="red")
+
+
+
+cor(df$hypertension,df$stroke)
+print("INFERENCE : It has a positive correlation. As Hypertension increases, the possibility of stroke also increases.")
+df1 <- sample_n(df,50)
+plot(df1$hypertension,df1$stroke,type='o',col="green")
+
+
+cor(df$heart_disease,df$stroke)
+print("INFERENCE : It has a positive correlation. As heart disease increases, the possibility of stroke also increases.")
+df1 <- sample_n(df,50)
+plot(df1$heart_disease,df1$stroke,type='o',col="black")
+
+
+```
+
+
+
+
+## VISUALIZATION OF GRAPHICAL DATA
+```{r}
+library(ggplot2)
+library(lattice)
+
+heart<-df %>%
+  filter(heart_disease == 1) 
+ggplot(heart,aes(x=gender,fill=gender))+geom_bar()+ggtitle("")
+print("Comparatively male have heart disease more than females.")
+
+
+heart<-df %>%
+  filter(heart_disease == 1) 
+ggplot(heart,aes(x=hypertension,fill=factor(hypertension)))+geom_bar()+ggtitle("")
+print("People without hypertension are having heart disease more than the 
+      people having hypertension.")
+
+
+ggplot(heart,aes(x=ever_married,fill=factor(ever_married)))+geom_bar()+ggtitle("")
+print("Lot of married people suffer from heart disease.")
+
+ggplot(heart,aes(x=work_type,fill=factor(work_type)))+geom_bar()+ggtitle("")
+print("People working in private office suffer from heart disease comparatively more than other type of workers.And only less children suffer from heart disease.")
+
+ggplot(heart,aes(x=Residence_type,fill=factor(Residence_type)))+geom_bar()+ggtitle("")
+print("Almost people living in both rural and urban areas suffer from heart disease almost in a same rate.")
+
+ggplot(heart,aes(x=smoking_status,fill=factor(smoking_status)))+geom_bar()+ggtitle("")
+print("People who have never smoked suffer from heart disease than others.")
+
+stroke<-df %>%
+  filter(stroke == 1) 
+ggplot(stroke,aes(x=heart_disease,fill=factor(heart_disease)))+geom_bar()+ggtitle("")
+print("Lot of people who have heart disease got stoke than others.")
+
+ggplot(heart,aes(x=age,y=heart_disease))+geom_point()
+print("Lot of people with above 50 years have heart disease than others.")
+
+ggplot(df,aes(x=age,y=stroke))+geom_point()
+print("Lot of people with above 50 years got stroke than others.")
+
+ggplot(df,aes(x=age,y=bmi))+geom_line()
+print("The bmi of people varies a lot with age.But we can observe that after age 18 lot of people have bmi more than 50.")
+
+ggplot(df,aes(x=age,y=avg_glucose_level))+geom_line()
+print("The average glucose level of people varies a lot with age..")
+
+ggplot(df,aes(x=bmi,y=age))+geom_line()
+print("The bmi of people varies a lot with age.But we can observe that after age 18 lot of people have bmi more than 50.")
+
+ggplot(df,aes(x=avg_glucose_level,y=age))+geom_line()
+print("The average glucose level of people varies a lot with age.")
+
+smoke<-df %>%
+  filter(smoking_status == "smokes") 
+
+ggplot(df,aes(x=age,y=smoking_status))+geom_line()
+
+ggplot(smoke,aes(x=age,fill=factor(heart_disease)))+geom_bar()+ggtitle("")
+print("People above 45 years who smoke suffer from heart diseases.")
+
+ggplot(smoke,aes(x=age,fill=factor(stroke)))+geom_bar()+ggtitle("")
+print("People above 45 years who smoke got stroke.")
+
+married<-df%>%filter(ever_married == "Yes")
+
+ggplot(married,aes(x=work_type,fill=factor(heart_disease)))+geom_bar()+ggtitle("")
+print("Married people who work for private companies suffer from heart diseases than govt staffs and self-employed workers.")
+
+ggplot(married,aes(x=work_type,fill=factor(stroke)))+geom_bar()+ggtitle("")
+print("Married people who work for private companies got lot of strokes than govt staffs and self-employed workers.")
+
+pie(table(heart$Residence_type),radius = 1,col=c('purple','pink'))
+print("People live in urban area have heart diseases relatively more than people who live in rural area.")
+
+pie(table(stroke$Residence_type),radius = 1,col=c('purple','pink'))
+print("People live in urban area have stroke relatively more than people who live in rural area.")
+
+pie(table(heart$smoking_status),radius = 1,col=c('purple','pink','blue','cyan'))
+print("Pie chart showing the details of the column Smoking_status for those who have heart disease.")
+
+pie(table(heart$work_type),radius = 1,col=c('purple','pink','blue','cyan'))
+print("Pie chart showing the details of the column Work type for those who have heart disease.")
+
+pie(table(stroke$smoking_status),radius = 1,col=c('purple','pink','blue','cyan'))
+print("Pie chart showing the details of the column Smoking_status for those who have stroke.")
+
+pie(table(stroke$work_type),radius = 1,col=c('purple','pink','blue','cyan'))
+print("Pie chart showing the details of the column Work type for those who have stroke.")
+
+
+qqnorm(stroke$age)
+qqline(stroke$age)
+print("One of the ends of the Q-Q Plot is deviating from the straight line and its center follows a straight line and it is not an negligible deviation, therefore the distribution is fat tailed.")
+
+qqnorm(heart$age)
+qqline(heart$age)
+print("One of the ends of the Q-Q Plot is deviating from the straight line and its center follows a straight line and it is not an negligible deviation, therefore the distribution is fat tailed.")
+
+shapiro.test(heart$age)
+print("Shapiro test done on the age column for those who have heart disease.")
+shapiro.test(stroke$age)
+print("Shapiro test done on the age column for those who have stroke.")
+shapiro.test(log(heart$age))
+
+```
+
+##### CONCLUSION: Age, Glucose level, BMI, hypertension, and heart disease of them are positively correlated with stroke. As age and other medical indicators increase, the possibility of stroke also increases and vice versa. Among all the factors, age and stroke are the most closely correlated having a value of 0.24 (approx.). BMI and stroke are the least correlated having a value of 0.0374
+
